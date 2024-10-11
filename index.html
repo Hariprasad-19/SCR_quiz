@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: black;
+      color: white;
+    }
+    .quiz-container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      background-color: #333;
+    }
+    .question {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+    .choices {
+      margin-top: 10px;
+    }
+    .choices label {
+      display: block;
+      margin-bottom: 5px;
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #444;
+      color: white;
+    }
+    .choices label.selected {
+      background-color: black; /* Highlight the selected option in black */
+      color: white;
+    }
+    .choices label.correct {
+      background-color: green;
+      color: white;
+      border: 1px solid green;
+    }
+    .choices label.wrong {
+      background-color: red;
+      color: white;
+      border: 1px solid red;
+    }
+    .next-btn {
+      margin-top: 20px;
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .next-btn:hover {
+      background-color: #0056b3;
+    }
+    .category-select {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    #results {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="category-select">
+      <h2>Select Difficulty Level</h2>
+      <button onclick="startQuiz('Beginner')">Beginner</button>
+      <button onclick="startQuiz('Intermediate')">Intermediate</button>
+      <button onclick="startQuiz('Expert')">Expert</button>
+    </div>
+    <div id="quizContent"></div>
+    <button class="next-btn" id="nextBtn" onclick="submitQuiz()" style="display: none;">Submit Answers</button>
+    <div id="results"></div>
+  </div>
+  <script>
+    const quizData = [
+      {
+        question: "Which of the following are the objectives of the Beti Bachao Beti Padhao scheme?\n1. Prevent female infanticide\n2. Prevent child marriages\n3. Ensure protection of a girl child\n4. Ensure education of a girl child",
+        choices: ["1, 3, 4", "2, 3, 4", "3 and 4", "All"],
+        answer: "All"
+      },
+      {
+        question: "Which festival was organized on the theme of Beti Bachao Beti Padhao?",
+        choices: ["Kala Mahotsava", "Mala Utsav", "Jana Utsav", "Kala Utsav"],
+        answer: "Kala Utsav"
+      },
+      {
+        question: "Which is the nodal ministry for Beti Bachao Beti Padhao scheme?",
+        choices: ["Ministry of Home Affairs", "Ministry of Health and Family Welfare", "Ministry of Women and Child Development", "Niti Ayog"],
+        answer: "Ministry of Women and Child Development"
+      },
+      {
+        question: "Who gave the slogan 'Beti Bachao Beti Padhao'?",
+        choices: ["Women and Child Development Minister Smriti Irani", "Prime Minister Sri Narendra Modi", "Home Minister Amit Saha", "None of these"],
+        answer: "Prime Minister Sri Narendra Modi"
+      },
+      {
+        question: "When did 'Beti Bachao Beti Padhao abhiyan' start?",
+        choices: ["22 January 2016", "22 January 2015", "22 January 2018", "22 January 2022"],
+        answer: "22 January 2015"
+      },
+      {
+        question: "Which is the National Girl Child Day?",
+        choices: ["12 January", "24 January", "14 January", "10 January"],
+        answer: "24 January"
+      },
+      {
+        question: "'Beti Bachao Beti Padhao' launched in which state?",
+        choices: ["Rajasthan", "Haryana", "Punjab", "Karnataka"],
+        answer: "Haryana"
+      },
+      {
+        question: "Who designed the logo of 'Beti Bachao Beti Padhao' abhiyan?",
+        choices: ["Sri Narendra Modi", "Dr Manmohan Singh", "Shri A J Raghuvendra", "None of these"],
+        answer: "Shri A J Raghuvendra"
+      },
+      {
+        question: "Customary Village Councils (CVCs) are",
+        choices: ["State sponsored organizations for local administration", "Privately managed administrative bodies with government financial support", "Traditional, non-state and unofficial local bodies participating in rural administration", "None of these"],
+        answer: "None of these"
+      },
+      {
+        question: "'Khap Panchayat' is an example of",
+        choices: ["Traditional and non-official local institution participating in village administration", "Government sponsored traditional private establishments of village", "A form of government approved judicial institutions functioning in Indian village administration", "None of these"],
+        answer: "Traditional and non-official local institution participating in village administration"
+      },
+      {
+        question: "One of the following started promoting Self Help Groups (SHGs) since 1992 with primary focus on empowerment of women and marginalized sections of the society.",
+        choices: ["Reserve Bank of India (RBI)", "Regional Rural Banks", "National Bank for Agriculture and Rural Development (NABARD)", "Village Cooperative Societies"],
+        answer: "National Bank for Agriculture and Rural Development (NABARD)"
+      },
+      {
+        question: "Which of the following problems faced by the Self Help Groups (SHGs)?",
+        choices: ["Inadequate financial assistance", "Poor financial management", "Lack of stability and unity", "All of these"],
+        answer: "All of these"
+      },
+      {
+        question: "Which of the following committee connected with matters relating to Panchayat Raj system?",
+        choices: ["Balwant Rai Mehta Committee", "Ashok Mehta Committee", "G V K Rao Committee", "All of these"],
+        answer: "All of these"
+      },
+      {
+        question: "Which of the following Constitutional Amendment Act provides for the establishment of Panchayats and Grama Sabha as the foundation of Panchayat Raj System?",
+        choices: ["73rd Constitutional Amendment Act, 1990", "74th Constitutional Amendment Act, 1992", "73rd Constitutional Amendment Act, 1992", "74th Constitutional Amendment Act, 1994"],
+        answer: "73rd Constitutional Amendment Act, 1992"
+      },
+      {
+        question: "Panchayat Raj is a",
+        choices: ["Three-tier system", "Two-tier system", "Single layer system", "None of these"],
+        answer: "Three-tier system"
+      },
+      {
+        question: "Not less than ..... of the total number of seats to be reserved for women, further not less than ..... of the total number of offices for chairperson at all levels of the panchayat to be reserved for women.",
+        choices: ["One-third : One-third", "One-third and two-third", "Two-third : One-third", "One-third; one-fourth"],
+        answer: "One-third : One-third"
+      },
+      {
+        question: "Which Articles of Indian Constitution mandates membership from Anglo-Indian community in Parliament and State Assemblies?",
+        choices: ["Article 243B", "Article 243F", "Article 243J", "Article 243K"],
+        answer: "Article 243F"
+      },
+      {
+        question: "Minimum age prescribed to contest in Panchayat elections is ________.",
+        choices: ["21 years", "25 years", "30 years", "18 years"],
+        answer: "21 years"
+      },
+      {
+        question: "Article ______ enshrines the provisions with respect to elections of the Panchayats.",
+        choices: ["Article 243O", "Article 243F", "Article 243J", "Article 240K"],
+        answer: "Article 243K"
+      },
+      {
+        question: "Article ................ bars the courts to interfere in the Panchayat Matters ..",
+        choices: ["Article 243O", "Article 243F", "Article 243J", "Article 243K"],
+        answer: "Article 243O"
+      },
+      {
+        question: "PESA Act means",
+        choices: ["Panchayat Extension and Stipulated Activities Act.", "Panchayats Extension to Scheduled Area Act.", "People Empowerment and Skill Augmentation Act", "None of these"],
+        answer: "Panchayats Extension to Scheduled Area Act."
+      },
+      {
+        question: "Who is recognized as 'Father of Rural Development' in India?",
+        choices: ["S K Dey", "Rabindranath Tagore", "Raja Ram Mohan Roy", "Sardar Vallabha Bai Patel"],
+        answer: "S K Dey"
+      },
+      {
+        question: "What is the Swachh Bharat Cess (SBC) rate shall be levied and collected in accordance with the provisions of Chapter VI of the Finance Act, 20157?",
+        choices: ["1.5% of the value of taxable service", "0.75% of the value of taxable service", "0.5% of the value of taxable service", "0.25% of the value of taxable service"],
+        answer: "0.5% of the value of taxable service"
+      },
+      {
+        question: "Which one of the following committees is not connected with Panchayat Raj system?",
+        choices: ["Drafting Committee", "Balwant Rai Mehta Committee", "Ashok Mehta Committee", "G V K Rao Committee"],
+        answer: "Drafting Committee"
+      },
+      {
+        question: "Balwant Rai Mehta Committee for Panchayat Raj was appointed in the year ................... ",
+        choices: ["1968", "1947", "1950", "1957"],
+        answer: "1957"
+      },
+      {
+        question: "Who is called as 'Father of Panchayati Raj System' in India?",
+        choices: ["Jawaharlal Nehru", "Mahatma Gandhi", "Balwant Rai Mehta", "Sardar Vallabhbhai Patel"],
+        answer: "Balwant Rai Mehta"
+      },
+      {
+        question: "Which is the primary element body of Panchayati Raj system?",
+        choices: ["Gram Sabha", "Standing Committee", "None of these", "A & B both"],
+        answer: "Gram Sabha"
+      },
+      {
+        question: "Sarva Shiksha Abhiyan (SSA) is a comprehensive and integrated flagship programme of Government of India to attain",
+        choices: ["Quality Higher Education", "Proficiency in Technical Education ", "Skill and Expertise in Medical Education", "Universal Elementary Education (UEE)"],
+        answer: "Universal Elementary Education (UEE)"
+      },
+      {
+        question: "Right to Education Act came into force in which year?",
+        choices: ["April 2010", "April 2009", "April 2008", "April 2011"],
+        answer: "April 2010"
+      },
+      {
+        question: "Who holds a record book of details like the map of the land, the crops that are grown there, the owner’s name, etc?",
+        choices: ["District Collector", "Patwari(Land Measurer)", "Panchayat President", "None of these"],
+        answer: "Patwari(Land Measurer)"
+      },
+      {
+        question: "‘Padhe Bharat Badhe Bharat’ is a nation-wide sub-programme of ................",
+        choices: ["Holistic Education", "New Education Policy (NEP)", "National Education Policy (NEP)", "Sarva Siksha Abhiyan"],
+        answer: "Sarva Siksha Abhiyan"
+      },
+
+  {
+    question: "The NIPUN Bharat Mission was launched as part of",
+    choices: [
+      "Sarva Shiksha Abhiyan in 2021",
+      "Samagra Shiksha Abhiyan in 2021",
+      "National Education Policy (NEP) in 2021",
+      "None of these"],
+    answer: "Samagra Shiksha Abhiyan in 2021"
+  },
+  {
+    question: "A government of India initiative launched by the then Prime Minister Dr. Manmohan Singh to create a literate society through a variety of teaching–learning programmes for the non-literate and neo-literate of 15 years and above is called as:",
+    choices: [
+      "Samagra Shiksha Abhiyan",
+      "Sarva Shiksha Abhiyan",
+      "Madhyamika Shiksha Abhiyan",
+      "Saakshar Bharat"],
+    answer: "Saakshar Bharat"
+  },
+  {
+    question: "Who was made as the brand ambassador of ‘Beti Bachao Beti Padhao’ initiative?",
+    choices: [
+      "Olympian Sakshi Mallik",
+      "Olympian Nirav Chopra",
+      "Olympian Vijendra Kuman",
+      "Olympian Abhinav Bindra"],
+    answer: "Olympian Sakshi Mallik"
+  },
+  {
+    question: "Who started ‘Selfie With Daughter’ initiative?",
+    choices: [
+      "Narendra Modi",
+      "Dr Manmohan Singh",
+      "Sunil Jaglan",
+      "Smt. Smriti Irani"],
+    answer: "Sunil Jaglan"
+  },
+  {
+    question: "Indian healthcare has evolved over the past three decades and is currently at a very critical juncture to achieve the 3As of healthcare; where 3As mean:",
+    choices: [
+      "Affordability, Accountability, Accuracy",
+      "Accessibility, Availability, Accountability",
+      "Affordability, Accessibility and Availability",
+      "Accessibility, Authenticity, Accountability"],
+    answer: "Affordability, Accessibility and Availability"
+  },
+  {
+    question: "Ayushman Bharat’ initiative aiming at achieving Universal Health Coverage was launched in the year:",
+    choices: [
+      "2021",
+      "2015",
+      "2018",
+      "2022"],
+    answer: "2018"
+  },
+  {
+    question: "National Health Protection Mission will have a defined benefit cover of ............... per family per year",
+    choices: [
+      "Rs. 3 lakhs",
+      "Rs. 10 lakhs",
+      "Rs. 5 lakhs",
+      "Rs. 1.5 lakhs"],
+    answer: "Rs. 5 lakhs"
+  },
+  {
+    question: "India’s largest National Health Protection Scheme has been implemented under the name:",
+    choices: [
+      "Samman Bharat",
+      "Ayushman Bharat",
+      "Adarsh Bharat",
+      "Nirmaan Bharat"],
+    answer: "Ayushman Bharat"
+  },
+  {
+    question: "Who will head the Ayushman Bharat National Health Protection Mission Council (AB-NHPMC) formed at national level to implement the scheme?",
+    choices: [
+      "Prime Minister",
+      "Minister of Health and Family Welfare",
+      "Minister of Ayush",
+      "Chairman of NITI Ayog"],
+    answer: "Minister of Health and Family Welfare"
+  },
+  {
+    question: "The states and UTs are required to set up SHA for the implementation of the scheme. What does SHA stand for?",
+    choices: [
+      "State Health Agency",
+      "Society Health Agency",
+      "Strategic Health Agency",
+      "Social Health Agency"],
+    answer: "State Health Agency"
+  },
+  {
+    question: "The Ayushman Bharat aims to target about .................... beneficiaries under the scheme?",
+    choices: [
+      "100 crore",
+      "10.74 crore",
+      "10.47 crore",
+      "10.65 crore"],
+    answer: "10.74 crore"
+  },
+  {
+    question: "The government has partnered with which entity to make the process cashless?",
+    choices: [
+      "Paytm",
+      "Reliance",
+      "NITI Ayog",
+      "None of these"],
+    answer: "NITI Ayog"
+  },
+  {
+    question: "Under the Ayushman Bharat programme, government has announced two major initiatives namely National Health Protection Scheme and Health and Wellness Centre as the two flagship programme with the aim to build New India by ..........................",
+    choices: [
+      "2022",
+      "2021",
+      "2030",
+      "2047"],
+    answer: "2022"
+  },
+  {
+    question: "With reference to ‘Ayushman Bharat’ initiative, which of the following statement is correct?\n1. Under the Ayushman Bharat programme, government has announced two major initiatives namely National Health Protection Scheme and Health and Wellness Centre as the two flagship programme with the aim to build New India\n2. The expenses incurred in this scheme are shared between the Centre and the States in 60:40 ratio.",
+    choices: [
+      "1 only",
+      "2 only",
+      "Both 1 and 2",
+      "Neither 1 nor 2"],
+    answer: "Both 1 and 2"
+  },
+  {
+    question: "Which of the following is linked with ‘Ayushman Bharat’ yojana?",
+    choices: [
+      "ABHA",
+      "ASHA",
+      "USHA",
+      "None of these"],
+    answer: "ABHA"
+  },
+  {
+    question: "ABHA stands for ........... in Ayushman Bharat.",
+    choices: [
+      "All Body Health Assessment",
+      "Ayushman Bharat Health Account",
+      "Ayushman Bharat Health Assessment",
+      "Agreement of Body and Health Assessment"],
+    answer: "Ayushman Bharat Health Account"
+  },
+  {
+    question: "Who is eligible for ABHA ID card?",
+    choices: [
+      "All Indian Citizens",
+      "Citizens with annual income below Rs. 5 lakhs",
+      "Citizens with BPL Card facility",
+      "SC, ST and EWS of the society"],
+    answer: "All Indian Citizens"
+  },
+  {
+    question: "NDHM means .............",
+    choices: [
+      "National Direct Health Medication",
+      "National Digital Health Monitoring",
+      "National Doctors and Health Mentors",
+      "National Digital Health Mission"],
+    answer: "National Digital Health Mission"
+  },
+  {
+    question: "With reference to Ayushman Bharat Pradhan Mantri Jana Arogya Yojana (AB-PMJAY) consider the following statements:\n1. It has been launched to achieve Universal Health Coverage\n2. It is the world's largest health insurance scheme fully financed by the government and the cost of implementation is shared between the Centre and the State at 60:40 ratio\n3. It is applicable to the people aged 60 and above only",
+    choices: [
+      "1 only",
+      "1 and 2 only",
+      "1 and 3 only",
+      "2 and 3 only"
+    ],
+    answer: "1 and 2 only"
+  },
+  {
+    question: "When was the 'Swachh Bharat Abhiyan' initiated?",
+    choices: [
+      "2016",
+      "2015",
+      "2018",
+      "2014"
+    ],
+    answer: "2014"
+  },
+  {
+    question: "'Swachh Bharat Mission' (Clean India Campaign) aims at:\n1. Eliminate open defecation\n2. Solid Waste Management",
+    choices: [
+      "1 only",
+      "2 only",
+      "Neither 1 nor 2",
+      "Both 1 and 2"
+    ],
+    answer: "Both 1 and 2"
+  },
+{
+  "question": "'Swachh Bharat Abhiyan' is a restructured version of ............",
+  "choices": [
+    "Nirmal Bharat Abhiyan, 2009",
+    "Clean India Campaign, 2009",
+    "Clean City Campaign, 2009",
+    "None of these"
+  ],
+  "answer": "Nirmal Bharat Abhiyan, 2009"
+},
+{
+  "question": "Mahatma Gandhi's 150th birth anniversary celebrated on ...............",
+  "choices": [
+    "2 October 2019",
+    "2 October 2020",
+    "2 October 2021",
+    "2 October 2018"
+  ],
+  "answer": "2 October 2019"
+},
+{
+  "question": "'Swachh Bharat Abhiyan' tagline 'Ek Kadam Swachhata Ki Aur' is given by ........",
+  "choices": [
+    "Shri Anant Khasbardar of Kolhapur, Maharashtra",
+    "Sri Narendra Modi",
+    "M S Swaminathan",
+    "Ms. Bhagiyasi Sheth of Rajkot, Gujarat"
+  ],
+  "answer": "Ms. Bhagiyasi Sheth of Rajkot, Gujarat"
+},
+{
+  "question": "Who among the following has designed the logo of 'Swachh Bharat Abhiyan'?",
+  "choices": [
+    "Shri Anant Khasbardar of Kolhapur, Maharashtra",
+    "Sri Narendra Modi",
+    "M S Swaminathan",
+    "Ms. Bhagiyasi Sheth of Rajkot, Gujarat"
+  ],
+  "answer": "Shri Anant Khasbardar of Kolhapur, Maharashtra"
+},
+{
+  "question": "What is the budget amount fixed for Swachh Bharat Mission – Urban 2.0 will be effective from 2021 to 2026?",
+  "choices": [
+    "100 crores",
+    "10.4 thousand crores",
+    "75.1 thousand crores",
+    "1.41 lakh crores"
+  ],
+  "answer": "1.41 lakh crores"
+},
+{
+  "question": "Which one of the following as a civil servant who led the 'Swachh Bharat Mission'?",
+  "choices": [
+    "Hari Chandana Dasari",
+    "Parameswaran Iyer",
+    "Renu Raj",
+    "Kunwar Bai Yadav"
+  ],
+  "answer": "Parameswaran Iyer"
+},
+{
+  "question": "At a rally in Champaran the Prime Minister called the campaign 'satyagraha se swachhagrah' in reference to Gandhi Champaran Satyagraha launched on ............",
+  "choices": [
+    "13 April 1919",
+    "1 April 1916",
+    "12 March 1931",
+    "None of these"
+  ],
+  "answer": "10 April 1916"
+},
+{
+  "question": "In which place 'Clean India Mission' (Swachh Bharat Abhiyan) was officially launched?",
+  "choices": [
+    "Patna, Bihar",
+    "Rajghat, New Delhi",
+    "Lucknow, UP",
+    "Kurukshetra, Haryana"
+  ],
+  "answer": "Rajghat, New Delhi"
+},
+{
+  "question": "How many sub missions are there in 'Swachh Bharat Abhiyan'?",
+  "choices": [
+    "Two",
+    "Four",
+    "Six",
+    "Three"
+  ],
+  "answer": "Two"
+},
+{
+  "question": "When was the Nirmal Bharat Abhiyan launched?",
+  "choices": [
+    "2013",
+    "2009",
+    "2020",
+    "2012"
+  ],
+  "answer": "2009"
+},
+{
+  "question": "Which of the following is/are objectives of 'Swachh Bharat Abhiyan'?",
+  "choices": [
+    "To eliminate open defecation",
+    "Eradication of manual scavenging",
+    "Effective solid waste management",
+    "All of these"
+  ],
+  "answer": "All of these"
+},
+{
+  "question": "Which is the twitter hashtag used for 'Swachh Bharat Mission'?",
+  "choices": [
+    "#MyIncredibleIndia",
+    "#MyCleanIndia",
+    "#MyNeatIndia",
+    "#MYSmartIndia"
+  ],
+  "answer": "#MyCleanIndia"
+},
+{
+  "question": "On which day does India observe the World Toilet Day?",
+  "choices": [
+    "14 August",
+    "19 November",
+    "13 February",
+    "15 September"
+  ],
+  "answer": "19 November"
+},
+{
+  "question": "Which is the first city in our country free of manual scavenging?",
+  "choices": [
+    "Alwar",
+    "Bharuch",
+    "Trichy",
+    "Jaipur"
+  ],
+  "answer": "Alwar"
+},
+{
+  "question": "Which is the cleanest village of India?",
+  "choices": [
+    "Mawlynnong",
+    "Punsari",
+    "Dharani",
+    "Ballia"
+  ],
+  "answer": "Mawlynnong"
+},
+{
+  "question": "What is the tagline of Swachh Bharat Abhiyan?",
+  "choices": [
+    "One India, Clean India",
+    "Swachh Bharat Mera Bharat",
+    "Ek Kadam Swachhata Ki Ore",
+    "None of these"
+  ],
+  "answer": "Ek Kadam Swachhata Ki Ore"
+},
+{
+  "question": "Which of the following committee recommended for Panchayat Raj system in India?",
+  "choices": [
+    "Drafting Committee",
+    "Balwant Rai Mehta Committee",
+    "Ashok Mehta Committee",
+    "None of these"
+  ],
+  "answer": "Balwant Rai Mehta Committee"
+},
+{
+  "question": "Which of the following system is established on the basis of the direct election?",
+  "choices": [
+    "Panchayat Raj",
+    "Block Committee",
+    "Zilla Parishad",
+    "All of these"
+  ],
+  "answer": "Panchayat Raj"
+},
+{
+  "question": "Which of the following Article of Indian Constitution is related to Panchayati Raj?",
+  "choices": [
+    "Article 324",
+    "Article 326",
+    "Article 194",
+    "Article 243"
+  ],
+  "answer": "Article 243"
+},
+{
+  "question": "What was the main purpose behind bringing the Panchayati Raj system to India?",
+  "choices": [
+    "Decentralization of the political power to the common public in villages",
+    "Prevent the criminalization of politics",
+    "Development of villages",
+    "To reduce election expenses"
+  ],
+  "answer": "Decentralization of the political power to the common public in villages"
+},
+{
+  "question": "Which schedule was added to the constitution by the 73rd Constitutional Amendment?",
+  "choices": [
+    "8 Schedule",
+    "11 Schedule",
+    "12 Schedule",
+    "10 Schedule"
+  ],
+  "answer": "11 Schedule"
+},
+{
+  "question": "Which statement is not correct regarding 'Gram Sabha'?",
+  "choices": [
+    "It is a body consisting of persons registered in the electoral rolls of a village comprised within the area of the Panchayat level",
+    "It is a village assembly consisting of all the registered voters in the area of the Panchayat",
+    "Its power is determined by the central government",
+    "Its powers and functions at the village level are like state legislature at the state level"
+  ],
+  "answer": "Its power is determined by the central government"
+},
+{
+  "question": "Which statement is true about Panchayati Raj?\n1.Its powers have been determined by the State Legislature\n2.Minimum age should be 21 years to contest the election at the panchayat level\n3.Election of the Panchayati Raj institutions is conducted under the guidance of the State Election Commission\n4.It is a three-tier system with panchayats at the lower level, panchayats samiti at intermediary or mandal level and Zilla Parishad at district level",
+  "choices": [
+    "1 only",
+    "2 and 4 only",
+    "1 and 3 only",
+    "All of these are true"
+  ],
+  "answer": "All of these are true"
+},
+{
+  "question": "How many posts are reserved for women at all levels in the Panchayati Raj system?",
+  "choices": [
+    "One–third",
+    "One-fourth",
+    "Two-third",
+    "There is no reservation for women in Panchayat Raj system."
+  ],
+  "answer": "One–third"
+},
+{
+  "question": "'Swachha Bharat Swachha Vidyalaya' (SBSV) campaign with the objective of cleanliness in schools run by the Ministry of .....................",
+  "choices": [
+    "Environment and Forest",
+    "Human Resource Development",
+    "Agriculture",
+    "Urban Development"
+  ],
+  "answer": "Human Resource Development"
+},
+{
+  "question": "What is the primary goal and focus of Swachha Bharat Mission?",
+  "choices": [
+    "Clean India",
+    "Digital India",
+    "Smart India",
+    "Skill India"
+  ],
+  "answer": "Clean India"
+},
+{
+  "question": "When was the ‘Skill India’ or ‘National Skills Development Mission of India’ launched?",
+  "choices": [
+    "15 July 2018",
+    "15 August 2016",
+    "15 July 2015",
+    "None of these"
+  ],
+  "answer": "15 July 2015"
+},
+{
+  "question": "Which of the following country entered into a partnership in Skill India programme?",
+  "choices": [
+    "Bhutan",
+    "Russia",
+    "USA",
+    "UK"
+  ],
+  "answer": "UK"
+},
+{
+  "question": "SANKALP means .......................",
+  "choices": [
+    "Skill Awareness and Knowledge Awareness for Loan Processing Programme",
+    "Skill Acquisition and Knowledge Awareness for Livelihood Promotion Programme",
+    "Social Acquisition and Knowledge Acquisition for Livelihood Promotion Programme",
+    "None of these"
+  ],
+  "answer": "Skill Acquisition and Knowledge Awareness for Livelihood Promotion Programme"
+},
+{
+  "question": "Skill India programmes are managed by .....................",
+  "choices": [
+    "National Skills Development Corporation of India (NSDC)",
+    "Urban Development Corporation of India",
+    "Labour Unions",
+    "None of these"
+  ],
+  "answer": "National Skills Development Corporation of India (NSDC)"
+},
+{
+  "question": "Skill India Mission is associated with the Ministry of ..................",
+  "choices": [
+    "Labour and Family Welfare",
+    "Human Resource Development",
+    "Skill Development and Entrepreneurship",
+    "NITI Ayog"
+  ],
+  "answer": "Skill Development and Entrepreneurship"
+},
+{
+  "question": "Which of the following is an initiative of Skill India Mission?",
+  "choices": [
+    "Food for Life Programme",
+    "Pradhan Mantri Kaushal Vikas Yojana (PMKVY)",
+    "Right to Education",
+    "Grammen Sadak Yojana"
+  ],
+  "answer": "Pradhan Mantri Kaushal Vikas Yojana (PMKVY)"
+},
+{
+  "question": "Consider the following statements about NRLM?\n1.It promotes the Self-employment and Organization of the rural poor\n2.It is supported by the World Bank with a credit of $ 1 Billion",
+  "choices": [
+    "1 only",
+    "2 only",
+    "Both 1 and 2",
+    "None of these"
+  ],
+  "answer": "Both 1 and 2"
+},
+{
+  "question": "NRLM – Ajeevaka is launched by the Ministry of ....................",
+  "choices": [
+    "Labour and Family Welfare",
+    "Rural Development",
+    "Urban Development",
+    "Human Resource Development"
+  ],
+  "answer": "Rural Development"
+},
+{
+  "question": "This is a platform for sharing of experiences of SHGs and extends mutual support to improve the overall performance.",
+  "choices": [
+    "Cluster Level Forum",
+    "Community Level Forum",
+    "Common Leave Facility",
+    "None of these"
+  ],
+  "answer": "Cluster Level Forum"
+},
+{
+  "question": "NRLM follows ...................",
+  "choices": [
+    "Supply Based Production Strategy",
+    "Demand Driven Strategy",
+    "Income Driven Strategy",
+    "None of these"
+  ],
+  "answer": "Demand Driven Strategy"
+},
+{
+  "question": "Which one of the following initiative of the Central Government is termed as a ‘stellar example of rural development’ by the World Bank in its World Development Report, 2014?",
+  "choices": [
+    "NRLM",
+    "Rural Livelihood Mission",
+    "NREGA, 2005",
+    "None of these"
+  ],
+  "answer": "NREGA, 2005"
+},
+{
+  "question": "NREGA aims to enhance livelihood security in rural areas by providing at least ............ days of wage employment in a financial year to at least one member of every household whose adult members volunteer to do unskilled manual work.",
+  "choices": [
+    "180",
+    "200",
+    "150",
+    "100"
+  ],
+  "answer": "100"
+},
+{
+  "question": "Under MNREGA scheme, who is mainly responsible as key functionary in implementing the schemes/works at village level?",
+  "choices": [
+    "Village Secretary",
+    "Gram Rozgar Sahayak",
+    "Gramin Vikas Adhikari",
+    "None of these"
+  ],
+  "answer": "Gram Rozgar Sahayak"
+},
+{
+  "question": "Which is the first state to employ the differently-abled, in MNREGA?",
+  "choices": [
+    "Kerala",
+    "Tamilnadu",
+    "Gujarat",
+    "Karnataka"
+  ],
+  "answer": "Tamilnadu"
+},
+{
+  "question": "For how many years the registration of job card under MNREGA is valid?",
+  "choices": [
+    "Five",
+    "Four",
+    "Ten",
+    "For life time"
+  ],
+  "answer": "Five"
+},
+{
+  "question": "Who selects the Social Audit Committee under MNREGA?",
+  "choices": [
+    "Members of Zilla Panchayat",
+    "District Collector",
+    "Grama Sabha",
+    "Minister for Rural Development"
+  ],
+  "answer": "Grama Sabha"
+},
+{
+  "question": "Union Government increased workdays from 100 days to 150 days per year under MGNREGA in which state?",
+  "choices": [
+    "Karnataka",
+    "Tamil Nadu",
+    "Kerala",
+    "Bihar"
+  ],
+  "answer": "Tamil Nadu"
+},
+{
+  "question": "In the cash benefits transferred last year under the Direct Benefits Transfer Scheme, the largest head under which DBT transfers were made was ..............................",
+  "choices": [
+    "MNREGA",
+    "LPG Subsidy",
+    "Fertilizer Subsidy",
+    "Compensation to farmers for the loss due to flood, drought, and other calamities, etc."
+  ],
+  "answer": "MNREGA"
+},
+{
+  "question": "Which of the following is/are true regarding Pradhan Mantri Awaas Yojana — Gramin?\n1. Cost of unit assistance to be shared between Central and State Governments in the ratio 75:25 in plain areas\n2. The beneficiary will be entitled to 90 days of unskilled labour from MGNREGA",
+  "choices": [
+    "1 only",
+    "2 only",
+    "Both 1 and 2",
+    "Neither 1 nor 2"
+  ],
+  "answer": "Both 1 and 2"
+},
+{
+  "question": "The NDA Government has decided to increase the number of workdays under MGNREGA from 100 days to ....................... days in drought-affected areas.",
+  "choices": [
+    "120",
+    "200",
+    "150",
+    "280"
+  ],
+  "answer": "150"
+},
+{
+  "question": "National Mission for a Green India is merged with ...................................",
+  "choices": [
+    "National River Conservation Scheme",
+    "Swachh Bharat Abhiyan",
+    "National Afforestation Programme",
+    "MNREGA"
+  ],
+  "answer": "MNREGA"
+},
+{
+  "question": "Consider the following statements: \n1. MGNREGS fulfills the constitutional rights in India \n2. MGNREGA is to be implemented mainly by gram panchayats \n3. The places where the recent unseasonal rain and hailstorms have affected crops, the government will increase the number of work days under the Mahatma Gandhi National Rural Employment Guarantee Scheme from 100 to 200 days per year. \nWhich of these above statements are correct?",
+  "choices": [
+    "1 only",
+    "1 and 3 only",
+    "2 and 3 only",
+    "1 and 2 only"
+  ],
+  "answer": "1 and 2 only"
+},
+{
+  "question": "Which of the following can help in the development of human resource?",
+  "choices": [
+    "Skill development",
+    "Improving literacy and access to information",
+    "Training",
+    "All of these"
+  ],
+  "answer": "All of these"
+},
+{
+  "question": "Rural development aims at: \n1. Improving rural health facilities \n2. Reducing poverty \n3. Development of rural infrastructure",
+  "choices": [
+    "1 only",
+    "2 only",
+    "1 and 3 only",
+    "1, 2, and 3"
+  ],
+  "answer": "1, 2, and 3"
+}
+
+
+
+
+ ];
+
+    let selectedDifficulty = '';
+    let userAnswers = [];
+
+    function startQuiz(difficulty) {
+      selectedDifficulty = difficulty;
+      userAnswers = [];
+      document.querySelector('.category-select').style.display = 'none';
+      document.getElementById('quizContent').innerHTML = '';
+      document.getElementById('results').style.display = 'none';
+      loadQuestions();
+    }
+
+    function loadQuestions() {
+      const quizContent = document.getElementById('quizContent');
+      quizData.forEach((quiz, index) => {
+        const questionBlock = document.createElement('div');
+        questionBlock.classList.add('question-block');
+        questionBlock.innerHTML = `
+          <div class="question">${quiz.question}</div>
+          <div class="choices" id="choices${index}"></div>
+        `;
+        quizContent.appendChild(questionBlock);
+        loadChoices(quiz, index);
+      });
+
+      if (selectedDifficulty === 'Beginner') {
+        showCorrectAnswers(); // Show correct answers immediately in Beginner mode
+      } else if (selectedDifficulty === 'Expert') {
+        document.getElementById('nextBtn').style.display = 'block'; // Show Submit button for Expert mode
+      } else if (selectedDifficulty === 'Intermediate') {
+        document.getElementById('nextBtn').style.display = 'none'; // Hide Submit button in Intermediate mode
+      }
+    }
+
+    function loadChoices(quiz, index) {
+      const choicesContainer = document.getElementById(`choices${index}`);
+      quiz.choices.forEach(choice => {
+        const label = document.createElement('label');
+        label.classList.add('choice-label');
+        label.textContent = choice;
+        choicesContainer.appendChild(label);
+        label.onclick = () => handleChoiceSelection(index, label.textContent, label); // Add click event to each choice
+      });
+    }
+
+    function handleChoiceSelection(questionIndex, choiceText, labelElement) {
+      const choiceLabels = document.querySelectorAll(`#choices${questionIndex} .choice-label`);
+
+      if (selectedDifficulty === 'Intermediate') {
+        // Provide immediate feedback for Intermediate mode
+        const correctAnswer = quizData[questionIndex].answer;
+        choiceLabels.forEach(label => label.classList.remove('selected'));
+        if (choiceText === correctAnswer) {
+          labelElement.classList.add('correct');
+        } else {
+          labelElement.classList.add('wrong');
+          const correctLabel = Array.from(choiceLabels).find(label => label.textContent === correctAnswer);
+          correctLabel.classList.add('correct');
+        }
+        userAnswers[questionIndex] = choiceText;
+
+      } else if (selectedDifficulty === 'Expert') {
+        // Select and save answer for Expert mode (no feedback until submission)
+        choiceLabels.forEach(label => label.classList.remove('selected'));
+        labelElement.classList.add('selected'); // Highlight in black
+        userAnswers[questionIndex] = choiceText;
+      }
+    }
+
+    function showCorrectAnswers() {
+      quizData.forEach((quiz, index) => {
+        const choiceLabels = document.querySelectorAll(`#choices${index} .choice-label`);
+        choiceLabels.forEach(label => {
+          if (label.textContent === quiz.answer) {
+            label.classList.add('correct');
+          }
+        });
+      });
+    }
+
+    function submitQuiz() {
+      if (selectedDifficulty === 'Expert') {
+        let allAnswered = true;
+        userAnswers = [];
+        quizData.forEach((quiz, index) => {
+          const selectedOption = document.querySelector(`#choices${index} .choice-label.selected`);
+          if (!selectedOption) {
+            allAnswered = false;
+          } else {
+            userAnswers.push(selectedOption.textContent);
+          }
+        });
+
+        if (!allAnswered) {
+          alert('Please select an answer for each question.');
+          return;
+        }
+
+        showResults(); // Show results only after all questions have been answered in Expert mode
+      }
+    }
+
+    function showResults() {
+      const resultsElement = document.getElementById('results');
+      resultsElement.style.display = 'block';
+      resultsElement.innerHTML = '';
+
+      let score = 0;
+      quizData.forEach((quiz, index) => {
+        const choiceLabels = document.querySelectorAll(`#choices${index} .choice-label`);
+        const correctAnswerIndex = quiz.choices.indexOf(quiz.answer);
+
+        choiceLabels.forEach(label => {
+          label.classList.remove('correct', 'wrong', 'selected');
+        });
+
+        if (userAnswers[index] === quiz.answer) {
+          score++;
+          choiceLabels[correctAnswerIndex].classList.add('correct'); // Highlight correct answer in green
+        } else {
+          const selectedOption = Array.from(choiceLabels).find(label => label.textContent === userAnswers[index]);
+          if (selectedOption) selectedOption.classList.add('wrong'); // Highlight wrong answer in red
+          choiceLabels[correctAnswerIndex].classList.add('correct'); // Highlight correct answer in green
+        }
+      });
+
+      resultsElement.innerHTML = `Quiz Completed! You scored ${score} out of ${quizData.length}.`;
+    }
+
+    document.addEventListener('click', event => {
+      if (event.target.classList.contains('choice-label') && selectedDifficulty === 'Expert') {
+        const choiceLabels = document.querySelectorAll(`#choices${event.target.parentElement.id.split('choices')[1]} .choice-label`);
+        choiceLabels.forEach(label => label.classList.remove('selected'));
+        event.target.classList.add('selected'); // Highlight selected option in black
+      }
+    });
+  </script>
+</body>
+</html>
