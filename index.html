@@ -65,6 +65,9 @@
       margin-bottom: 20px;
       text-align: center;
     }
+.red-star {
+  color: red;
+  font-weight: bold;
     #results {
       display: none;
     }
@@ -938,7 +941,7 @@
 
  ];
 
-    let selectedDifficulty = '';
+     let selectedDifficulty = '';
     let userAnswers = [];
 
     function startQuiz(difficulty) {
@@ -951,26 +954,29 @@
     }
 
     function loadQuestions() {
-      const quizContent = document.getElementById('quizContent');
-      quizData.forEach((quiz, index) => {
+    const quizContent = document.getElementById('quizContent');
+    quizData.forEach((quiz, index) => {
+        const questionNumber = index + 1; // Generate question number
         const questionBlock = document.createElement('div');
         questionBlock.classList.add('question-block');
         questionBlock.innerHTML = `
-          <div class="question">${quiz.question}</div>
+          <div class="question">${questionNumber}. ${quiz.question}</div> <!-- Add question number here -->
           <div class="choices" id="choices${index}"></div>
         `;
         quizContent.appendChild(questionBlock);
         loadChoices(quiz, index);
-      });
+    });
 
-      if (selectedDifficulty === 'Beginner') {
+    if (selectedDifficulty === 'Beginner') {
         showCorrectAnswers(); // Show correct answers immediately in Beginner mode
-      } else if (selectedDifficulty === 'Expert') {
+    } else if (selectedDifficulty === 'Expert') {
         document.getElementById('nextBtn').style.display = 'block'; // Show Submit button for Expert mode
-      } else if (selectedDifficulty === 'Intermediate') {
+    } else if (selectedDifficulty === 'Intermediate') {
         document.getElementById('nextBtn').style.display = 'none'; // Hide Submit button in Intermediate mode
-      }
     }
+}
+
+
 
     function loadChoices(quiz, index) {
       const choicesContainer = document.getElementById(`choices${index}`);
@@ -1019,53 +1025,76 @@
     }
 
     function submitQuiz() {
-      if (selectedDifficulty === 'Expert') {
-        let allAnswered = true;
-        userAnswers = [];
-        quizData.forEach((quiz, index) => {
-          const selectedOption = document.querySelector(`#choices${index} .choice-label.selected`);
-          if (!selectedOption) {
-            allAnswered = false;
-          } else {
-            userAnswers.push(selectedOption.textContent);
-          }
-        });
+  if (selectedDifficulty === 'Expert') {
+    let allAnswered = true;
+    userAnswers = [];
 
-        if (!allAnswered) {
-          alert('Please select an answer for each question.');
-          return;
-        }
+    quizData.forEach((quiz, index) => {
+      const selectedOption = document.querySelector(`#choices${index} .choice-label.selected`);
+      
+      // Remove previous red star mark if it exists
+      const questionElement = document.querySelector(`#choices${index}`).previousElementSibling;
+      const existingStar = questionElement.querySelector('.red-star');
+      if (existingStar) existingStar.remove();
 
-        showResults(); // Show results only after all questions have been answered in Expert mode
+      if (!selectedOption) {
+        allAnswered = false;
+        // Add red star mark for unanswered questions
+        const redStar = document.createElement('span');
+        redStar.textContent = ' *';
+        redStar.classList.add('red-star');
+        questionElement.appendChild(redStar); // Add the red star to the question
+      } else {
+        userAnswers.push(selectedOption.textContent);
       }
+    });
+
+    if (!allAnswered) {
+      alert('Please select an answer for each question.');
+      return;  // Don't submit the quiz if there are unanswered questions
     }
+
+    showResults();  // Proceed to show results if all questions are answered
+  }
+}
+
+
 
     function showResults() {
-      const resultsElement = document.getElementById('results');
-      resultsElement.style.display = 'block';
-      resultsElement.innerHTML = '';
+    const resultsElement = document.getElementById('results');
+    resultsElement.style.display = 'block';
+    resultsElement.innerHTML = '';
 
-      let score = 0;
-      quizData.forEach((quiz, index) => {
+    let score = 0;
+
+    quizData.forEach((quiz, index) => {
         const choiceLabels = document.querySelectorAll(`#choices${index} .choice-label`);
-        const correctAnswerIndex = quiz.choices.indexOf(quiz.answer);
+        const correctAnswer = quiz.answer;
 
+        // Clear previous styling (if any)
         choiceLabels.forEach(label => {
-          label.classList.remove('correct', 'wrong', 'selected');
+            label.classList.remove('correct', 'wrong', 'selected');
         });
 
-        if (userAnswers[index] === quiz.answer) {
-          score++;
-          choiceLabels[correctAnswerIndex].classList.add('correct'); // Highlight correct answer in green
-        } else {
-          const selectedOption = Array.from(choiceLabels).find(label => label.textContent === userAnswers[index]);
-          if (selectedOption) selectedOption.classList.add('wrong'); // Highlight wrong answer in red
-          choiceLabels[correctAnswerIndex].classList.add('correct'); // Highlight correct answer in green
-        }
-      });
+        const userAnswer = userAnswers[index]; // Retrieve user answer
 
-      resultsElement.innerHTML = `Quiz Completed! You scored ${score} out of ${quizData.length}.`;
-    }
+        // Find the correct answer label
+        const correctLabel = Array.from(choiceLabels).find(label => label.textContent === correctAnswer);
+        if (correctLabel) correctLabel.classList.add('correct'); // Highlight correct answer in green
+
+        // Check if the user answered correctly
+        if (userAnswer === correctAnswer) {
+            score++;
+        } else {
+            // Highlight the wrong answer in red (if the user selected any option)
+            const selectedLabel = Array.from(choiceLabels).find(label => label.textContent === userAnswer);
+            if (selectedLabel) selectedLabel.classList.add('wrong');
+        }
+    });
+
+    resultsElement.innerHTML = `Quiz Completed! You scored ${score} out of ${quizData.length}.`;
+}
+
 
     document.addEventListener('click', event => {
       if (event.target.classList.contains('choice-label') && selectedDifficulty === 'Expert') {
